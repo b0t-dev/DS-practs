@@ -1,0 +1,279 @@
+// Switch or create database
+use myDatabase
+
+// Check databases
+show dbs
+
+// Create collection
+db.createCollection("students")
+
+// Show collections
+show collections
+
+db.students.insertOne({
+  name: "John",
+  age: 22,
+  course: "CS",
+  marks: 85
+})
+
+db.students.insertMany([
+  { name: "Alice", age: 20, course: "IT", marks: 78 },
+  { name: "Bob", age: 23, course: "CS", marks: 92 },
+  { name: "Charlie", age: 21, course: "AI", marks: 88 }
+])
+
+db.students.find()
+
+db.students.find({ course: "CS" })
+
+db.students.updateOne(
+  { name: "John" },
+  { $set: { marks: 90 } }
+)
+db.students.updateMany(
+  { course: "CS" },
+  { $inc: { marks: 5 } }
+)
+db.students.find({ marks: { $gt: 80 } })   // greater than
+db.students.find({ marks: { $lt: 90 } })   // less than
+db.students.find({ marks: { $gte: 85 } })  // >=
+db.students.find({ marks: { $lte: 90 } })  // <=
+
+db.students.find({
+  $and: [{ course: "CS" }, { marks: { $gt: 80 } }]
+})
+
+db.students.find({
+  $or: [{ course: "AI" }, { marks: { $lt: 80 } }]
+})
+
+
+// Delete one
+db.students.deleteOne({ name: "Alice" })
+
+// Delete many
+db.students.deleteMany({ course: "IT" })
+
+// Include only name and marks
+db.students.find({}, { name: 1, marks: 1, _id: 0 })
+// Ascending
+db.students.find().sort({ marks: 1 })
+
+// Descending
+db.students.find().sort({ marks: -1 })
+
+db.students.aggregate([
+  { $match: { marks: { $gt: 80 } } }
+])
+
+
+db.students.aggregate([
+  {
+    $project: {
+      name: 1,
+      grade: {
+        $cond: { if: { $gte: ["$marks", 85] }, then: "A", else: "B" }
+      }
+    }
+  }
+])
+
+db.students.aggregate([
+  {
+    $group: {
+      _id: "$course",
+      totalMarks: { $sum: "$marks" },
+      avgMarks: { $avg: "$marks" }
+    }
+  }
+])
+
+db.students.mapReduce(
+  function() {
+    emit(this.course, this.marks);
+  },
+  function(key, values) {
+    return Array.sum(values);
+  },
+  {
+    out: "course_totals"
+  }
+)
+
+
+
+
+//Mongo PDF 
+
+
+// ======================
+// DATABASE & COLLECTION
+// ======================
+
+use myDB
+
+use myNewDB
+db.myNewCollection1.insertOne({ x: 1 })
+
+db.myNewCollection2.insertOne({ x: 1 })
+
+db.myNewCollection3.createIndex({ y: 1 })
+
+
+// ======================
+// INVENTORY DATA (INSERT)
+// ======================
+
+db.inventory.insertMany([
+ { item: "journal", qty: 25, size: { h: 14, w: 21, uom: "cm" }, status: "A" },
+ { item: "notebook", qty: 50, size: { h: 8.5, w: 11, uom: "in" }, status: "P" },
+ { item: "paper", qty: 100, size: { h: 8.5, w: 11, uom: "in" }, status: "D" },
+ { item: "planner", qty: 75, size: { h: 22.85, w: 30, uom: "cm" }, status: "D" },
+ { item: "postcard", qty: 45, size: { h: 10, w: 15.25, uom: "cm" }, status: "A" }
+])
+
+
+// ======================
+// READ / FIND QUERIES
+// ======================
+
+// Select all
+db.inventory.find({})
+
+// Equality
+db.inventory.find({ status: "D" })
+
+// IN operator
+db.inventory.find({ status: { $in: ["A", "D"] } })
+
+// AND condition
+db.inventory.find({ status: "A", qty: { $lt: 30 } })
+
+// OR condition
+db.inventory.find({
+  $or: [{ status: "A" }, { qty: { $lt: 30 } }]
+})
+
+// AND + OR
+db.inventory.find({
+  status: "A",
+  $or: [{ qty: { $lt: 30 } }, { item: /^p/ }]
+})
+
+
+// ======================
+// OPERATORS EXAMPLES
+// ======================
+
+db.mycol.find({"by":"tutorials point"}).pretty()
+
+db.mycol.find({"likes":{$lt:50}}).pretty()
+
+db.mycol.find({"likes":{$lte:50}}).pretty()
+
+db.mycol.find({"likes":{$gt:50}}).pretty()
+
+db.mycol.find({"likes":{$gte:50}}).pretty()
+
+db.mycol.find({"likes":{$ne:50}}).pretty()
+
+db.mycol.find({"name":{$in:["Raj","Ram","Raghu"]}}).pretty()
+
+db.mycol.find({"name":{$nin:["Ramu","Raghav"]}}).pretty()
+
+
+// ======================
+// UPDATE OPERATIONS
+// ======================
+
+db.mycol.update(
+  {'title':'MongoDB Overview'},
+  {$set:{'title':'New MongoDB Tutorial'}}
+)
+
+db.mycol.find()
+
+// SAVE (REPLACE)
+db.mycol.save({
+  "_id": ObjectId("5983548781331adf45ec7"),
+  "title": "Tutorials Point New Topic",
+  "by": "Tutorials Point"
+})
+
+db.mycol.find()
+
+
+// ======================
+// DELETE OPERATIONS
+// ======================
+
+// Remove specific
+db.mycol.remove({'title':'MongoDB Overview'})
+
+db.mycol.find()
+
+// Remove one
+db.COLLECTION_NAME.remove(DELETION_CRITERIA,1)
+
+// Remove all
+db.mycol.remove()
+
+db.mycol.find()
+
+
+// ======================
+// PROJECTION
+// ======================
+
+db.mycol.find({},{"title":1,_id:0})
+
+
+// ======================
+// SORTING
+// ======================
+
+db.mycol.find({},{"title":1,_id:0}).sort({"title":-1})
+
+
+// ======================
+// MAP REDUCE
+// ======================
+
+// Map function
+var mapFunction1 = function() {
+  emit(this.cust_id, this.price);
+};
+
+// Reduce function
+var reduceFunction1 = function(keyCustId, valuesPrices) {
+  return Array.sum(valuesPrices);
+};
+
+// Execute mapReduce
+db.orders.mapReduce(
+  mapFunction1,
+  reduceFunction1,
+  { out: "map_reduce_example" }
+);
+
+// View result
+db.map_reduce_example.find().sort({ _id: 1 })
+
+
+// ======================
+// ORDERS DATA (MAP REDUCE)
+// ======================
+
+db.orders.insertMany([
+ { _id: 1, cust_id: "Ant O. Knee", ord_date: new Date("2020-03-01"), price: 25, items: [ { sku: "oranges", qty: 5, price: 2.5 }, { sku: "apples", qty: 5, price: 2.5 } ], status: "A" },
+ { _id: 2, cust_id: "Ant O. Knee", ord_date: new Date("2020-03-08"), price: 70, items: [ { sku: "oranges", qty: 8, price: 2.5 }, { sku: "chocolates", qty: 5, price: 10 } ], status: "A" },
+ { _id: 3, cust_id: "Busby Bee", ord_date: new Date("2020-03-08"), price: 50, items: [ { sku: "oranges", qty: 10, price: 2.5 }, { sku: "pears", qty: 10, price: 2.5 } ], status: "A" },
+ { _id: 4, cust_id: "Busby Bee", ord_date: new Date("2020-03-18"), price: 25, items: [ { sku: "oranges", qty: 10, price: 2.5 } ], status: "A" },
+ { _id: 5, cust_id: "Busby Bee", ord_date: new Date("2020-03-19"), price: 50, items: [ { sku: "chocolates", qty: 5, price: 10 } ], status: "A"},
+ { _id: 6, cust_id: "Cam Elot", ord_date: new Date("2020-03-19"), price: 35, items: [ { sku: "carrots", qty: 10, price: 1.0 }, { sku: "apples", qty: 10, price: 2.5 } ], status: "A" },
+ { _id: 7, cust_id: "Cam Elot", ord_date: new Date("2020-03-20"), price: 25, items: [ { sku: "oranges", qty: 10, price: 2.5 } ], status: "A" },
+ { _id: 8, cust_id: "Don Quis", ord_date: new Date("2020-03-20"), price: 75, items: [ { sku: "chocolates", qty: 5, price: 10 }, { sku: "apples", qty: 10, price: 2.5 } ], status: "A" },
+ { _id: 9, cust_id: "Don Quis", ord_date: new Date("2020-03-20"), price: 55, items: [ { sku: "carrots", qty: 5, price: 1.0 }, { sku: "apples", qty: 10, price: 2.5 }, { sku: "oranges", qty: 10, price: 2.5 } ], status: "A" },
+ { _id: 10, cust_id: "Don Quis", ord_date: new Date("2020-03-23"), price: 25, items: [ { sku: "oranges", qty: 10, price: 2.5 } ], status: "A" }
+])
